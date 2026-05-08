@@ -16,36 +16,6 @@ const generateTexts = (mode, level) => {
   return pool[level % pool.length];
 };
 
-// --- NEW COMPONENT: CUSTOM CURSOR ---
-const CustomCursor = () => {
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [isHovering, setIsHovering] = useState(false);
-
-  useEffect(() => {
-    const moveCursor = (e) => setPosition({ x: e.clientX, y: e.clientY });
-    const handleMouseOver = (e) => { if (e.target.tagName === 'BUTTON' || e.target.tagName === 'A') setIsHovering(true); };
-    const handleMouseOut = () => setIsHovering(false);
-    
-    window.addEventListener('mousemove', moveCursor);
-    window.addEventListener('mouseover', handleMouseOver);
-    window.addEventListener('mouseout', handleMouseOut);
-    return () => {
-      window.removeEventListener('mousemove', moveCursor);
-      window.removeEventListener('mouseover', handleMouseOver);
-      window.removeEventListener('mouseout', handleMouseOut);
-    };
-  }, []);
-
-  return (
-    <div 
-      className={`fixed top-0 left-0 w-6 h-6 border-2 border-cyan-500 rounded-full pointer-events-none z-[9999] transition-transform duration-100 ease-out flex items-center justify-center`}
-      style={{ transform: `translate(${position.x - 12}px, ${position.y - 12}px) scale(${isHovering ? 2.5 : 1})`, mixBlendMode: 'difference' }}
-    >
-      <div className="w-1 h-1 bg-cyan-400 rounded-full shadow-[0_0_10px_#22d3ee]"></div>
-    </div>
-  );
-};
-
 const App = () => {
   const [currentPage, setCurrentPage] = useState('auth'); 
   const [user, setUser] = useState(null); 
@@ -93,8 +63,7 @@ const App = () => {
   };
 
   return (
-    <div className={`min-h-screen flex flex-col transition-all duration-500 ${settings.theme === 'dark' ? 'bg-[#050505] text-white' : 'bg-[#f0f2f5] text-gray-900'} font-sans cursor-none`}>
-      <CustomCursor />
+    <div className={`min-h-screen flex flex-col transition-all duration-500 ${settings.theme === 'dark' ? 'bg-[#050505] text-white' : 'bg-[#f0f2f5] text-gray-900'} font-sans`}>
       <div className="flex-grow">{renderPage()}</div>
       <footer className="w-full py-6 flex flex-col items-center opacity-40">
         <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/5 rounded-full backdrop-blur-md">
@@ -106,7 +75,7 @@ const App = () => {
   );
 };
 
-// --- AUTH PAGE ---
+// --- UPGRADED AUTH PAGE WITH EXAMPLES ---
 const AuthPage = ({ setUser, setPage, setStats }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
@@ -135,7 +104,7 @@ const AuthPage = ({ setUser, setPage, setStats }) => {
         if (users.find(u => u.username === form.username) || form.username === ADMIN_USER) return alert("Identity already exists.");
         users.push(form);
         localStorage.setItem('kf_users_list', JSON.stringify(users));
-        alert("Identity Created! Log in to initialize.");
+        alert(`Account Created for ${form.username}! Now Log in.`);
         setIsLogin(true);
       } else { alert("Min requirements: User(3), Pass(4)"); }
     }
@@ -144,11 +113,18 @@ const AuthPage = ({ setUser, setPage, setStats }) => {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6">
       <div className="w-full max-w-md bg-white/5 border border-white/10 p-10 rounded-[2.5rem] backdrop-blur-xl shadow-2xl">
-        <h2 className="text-3xl font-black text-cyan-500 mb-6 uppercase italic tracking-tighter">{isLogin ? 'Secure Portal' : 'New Identity'}</h2>
+        <h2 className="text-3xl font-black text-cyan-500 mb-2 uppercase italic tracking-tighter">{isLogin ? 'Secure Portal' : 'New Identity'}</h2>
+        
+        {/* Example Hint Section */}
+        <div className="mb-6 p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-xl">
+            <p className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest mb-1">Example Node Access:</p>
+            <p className="text-[9px] text-gray-400 font-mono">User: <span className="text-white">Alex_X</span> | Pass: <span className="text-white">Alex2026</span></p>
+        </div>
+
         <div className="space-y-4 mb-8">
-          <input className="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none focus:border-cyan-500 text-sm" placeholder="Username" onChange={(e)=>setForm({...form, username: e.target.value})} />
+          <input className="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none focus:border-cyan-500 text-sm" placeholder="Username" value={form.username} onChange={(e)=>setForm({...form, username: e.target.value})} />
           <div className="relative">
-            <input className="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none focus:border-cyan-500 text-sm" type={showPassword ? "text" : "password"} placeholder="Password" onChange={(e)=>setForm({...form, password: e.target.value})} />
+            <input className="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none focus:border-cyan-500 text-sm" type={showPassword ? "text" : "password"} placeholder="Password" value={form.password} onChange={(e)=>setForm({...form, password: e.target.value})} />
             <button onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-4 opacity-40">{showPassword ? '🔒' : '👁️'}</button>
           </div>
         </div>
@@ -211,7 +187,7 @@ const HomePage = ({ user, setUser, setPage, settings, setSettings, stats }) => {
   );
 };
 
-// --- NEW PAGE: LEADERBOARD ---
+// --- LEADERBOARD PAGE ---
 const LeaderboardPage = ({ setPage }) => {
     const [players, setPlayers] = useState([]);
 
@@ -500,7 +476,7 @@ const LevelsPage = ({ setPage, stats, setStats }) => (
 
 // --- MENU CARD ---
 const MenuCard = ({ label, icon, onClick, color }) => (
-  <button onClick={onClick} className={`bg-gradient-to-br ${color} p-8 md:p-12 rounded-[3rem] flex flex-col items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-2xl group`}>
+  <button onClick={onClick} className={`bg-gradient-to-br ${color} p-8 md:p-12 rounded-[3rem] border border-white/10 flex flex-col items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-2xl group`}>
     <span className="text-5xl mb-4 group-hover:animate-bounce transition-all">{icon}</span>
     <span className="font-black text-[10px] tracking-[0.2em] uppercase text-white">{label}</span>
   </button>
