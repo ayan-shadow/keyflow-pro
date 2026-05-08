@@ -75,7 +75,7 @@ const App = () => {
   );
 };
 
-// --- UPGRADED AUTH PAGE WITH EXAMPLES ---
+// --- UPGRADED AUTH PAGE WITH INLINE EXAMPLES ---
 const AuthPage = ({ setUser, setPage, setStats }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
@@ -113,21 +113,21 @@ const AuthPage = ({ setUser, setPage, setStats }) => {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6">
       <div className="w-full max-w-md bg-white/5 border border-white/10 p-10 rounded-[2.5rem] backdrop-blur-xl shadow-2xl">
-        <h2 className="text-3xl font-black text-cyan-500 mb-2 uppercase italic tracking-tighter">{isLogin ? 'Secure Portal' : 'New Identity'}</h2>
+        <h2 className="text-3xl font-black text-cyan-500 mb-8 uppercase italic tracking-tighter text-center">{isLogin ? 'Secure Portal' : 'New Identity'}</h2>
         
-        {/* Example Hint Section */}
-        <div className="mb-6 p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-xl">
-            <p className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest mb-1">Example Node Access:</p>
-            <p className="text-[9px] text-gray-400 font-mono">User: <span className="text-white">Alex_X</span> | Pass: <span className="text-white">Alex2026</span></p>
-        </div>
-
-        <div className="space-y-4 mb-8">
-          <input className="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none focus:border-cyan-500 text-sm" placeholder="Username" value={form.username} onChange={(e)=>setForm({...form, username: e.target.value})} />
+        <div className="space-y-6 mb-8">
+          <div>
+            <input className="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none focus:border-cyan-500 text-sm" placeholder="Username" value={form.username} onChange={(e)=>setForm({...form, username: e.target.value})} />
+            <p className="text-[9px] text-gray-500 font-bold uppercase mt-2 ml-2 tracking-widest">Example: Ayan_X_2026</p>
+          </div>
+          
           <div className="relative">
             <input className="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none focus:border-cyan-500 text-sm" type={showPassword ? "text" : "password"} placeholder="Password" value={form.password} onChange={(e)=>setForm({...form, password: e.target.value})} />
             <button onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-4 opacity-40">{showPassword ? '🔒' : '👁️'}</button>
+            <p className="text-[9px] text-gray-500 font-bold uppercase mt-2 ml-2 tracking-widest">Type your secure alpha-numeric sequence here</p>
           </div>
         </div>
+        
         <button onClick={handleAuth} className="w-full bg-cyan-600 py-4 rounded-xl font-black uppercase text-xs tracking-widest shadow-lg shadow-cyan-500/20 transition-transform active:scale-95"> {isLogin ? 'Initialize' : 'Register'} </button>
         <p className="mt-6 text-center text-[10px] text-gray-500 font-bold uppercase cursor-pointer hover:text-cyan-400" onClick={() => setIsLogin(!isLogin)}> {isLogin ? "Create new sector" : "Return to portal"} </p>
       </div>
@@ -187,7 +187,7 @@ const HomePage = ({ user, setUser, setPage, settings, setSettings, stats }) => {
   );
 };
 
-// --- LEADERBOARD PAGE ---
+// --- UPGRADED LEADERBOARD PAGE ---
 const LeaderboardPage = ({ setPage }) => {
     const [players, setPlayers] = useState([]);
 
@@ -196,29 +196,56 @@ const LeaderboardPage = ({ setPage }) => {
       const list = Object.keys(allProgress).map(name => ({
         name,
         level: allProgress[name].maxUnlocked,
-        time: allProgress[name].totalPlayTime
+        time: allProgress[name].totalPlayTime,
+        lastActive: allProgress[name].history.length > 0 ? allProgress[name].history[allProgress[name].history.length-1].date : "Never"
       })).sort((a, b) => b.level - a.level || a.time - b.time);
       setPlayers(list);
     }, []);
 
     return (
-      <div className="p-8 md:p-20 max-w-4xl mx-auto min-h-screen">
-        <button onClick={() => setPage('home')} className="mb-10 text-green-500 font-black text-xs uppercase tracking-widest">← Return to Base</button>
-        <h2 className="text-5xl font-black mb-10 italic uppercase tracking-tighter">Global Rankings</h2>
+      <div className="p-8 md:p-20 max-w-5xl mx-auto min-h-screen">
+        <div className="flex justify-between items-end mb-12 border-b border-white/10 pb-6">
+            <div>
+                <button onClick={() => setPage('home')} className="mb-4 text-green-500 font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:translate-x-[-5px] transition-transform">← Return to Base</button>
+                <h2 className="text-6xl font-black italic uppercase tracking-tighter">Global Rankings</h2>
+            </div>
+            <div className="text-right">
+                <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Active Nodes</p>
+                <p className="text-3xl font-black text-cyan-500 font-mono">{players.length}</p>
+            </div>
+        </div>
+
         <div className="space-y-4">
           {players.map((p, i) => (
-            <div key={i} className={`flex justify-between items-center p-6 rounded-2xl border ${i === 0 ? 'bg-cyan-500/10 border-cyan-500' : 'bg-white/5 border-white/10'}`}>
-              <div className="flex items-center gap-6">
-                <span className={`text-2xl font-black ${i === 0 ? 'text-cyan-400' : 'text-gray-600'}`}>#0{i + 1}</span>
-                <span className="font-black uppercase tracking-widest">{p.name}</span>
+            <div key={i} className={`group flex flex-col md:flex-row justify-between items-center p-6 rounded-[2rem] border transition-all hover:scale-[1.01] ${i === 0 ? 'bg-cyan-500/10 border-cyan-500 shadow-[0_0_30px_rgba(6,182,212,0.1)]' : 'bg-white/5 border-white/10'}`}>
+              <div className="flex items-center gap-6 mb-4 md:mb-0">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-xl ${i === 0 ? 'bg-cyan-500 text-black' : i === 1 ? 'bg-gray-400 text-black' : i === 2 ? 'bg-amber-600 text-black' : 'bg-white/10 text-gray-500'}`}>
+                  {i + 1}
+                </div>
+                <div>
+                    <span className={`font-black uppercase tracking-widest block text-lg ${i === 0 ? 'text-cyan-400' : 'text-white'}`}>{p.name} {i === 0 && '👑'}</span>
+                    <span className="text-[9px] text-gray-500 font-bold uppercase">Last Sync: {p.lastActive}</span>
+                </div>
               </div>
-              <div className="text-right">
-                <div className="text-cyan-400 font-black">SECTOR {p.level}</div>
-                <div className="text-[10px] text-gray-500 uppercase font-bold">{Math.floor(p.time/60)}m Uptime</div>
+              
+              <div className="flex gap-10 text-center md:text-right">
+                <div>
+                    <p className="text-[9px] text-gray-500 font-black uppercase mb-1">Max Sector</p>
+                    <p className={`text-xl font-black font-mono ${i === 0 ? 'text-cyan-400' : 'text-purple-400'}`}>{p.level}</p>
+                </div>
+                <div>
+                    <p className="text-[9px] text-gray-500 font-black uppercase mb-1">Time Elapsed</p>
+                    <p className="text-xl font-black font-mono text-green-400">{Math.floor(p.time/60)}m</p>
+                </div>
               </div>
             </div>
           ))}
-          {players.length === 0 && <p className="text-center text-gray-500 uppercase font-black italic">No data synced in local network.</p>}
+          {players.length === 0 && (
+              <div className="py-20 text-center">
+                  <div className="text-6xl mb-4 opacity-20">📡</div>
+                  <p className="text-gray-500 uppercase font-black italic tracking-widest">No node data detected in local network</p>
+              </div>
+          )}
         </div>
       </div>
     );
@@ -250,7 +277,7 @@ const AnalyticsPage = ({ setPage, stats }) => {
         </div>
       </div>
 
-      <div className="w-full bg-white/5 border border-white/10 rounded-3xl overflow-hidden">
+      <div className="w-full bg-white/5 border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
         <div className="p-6 border-b border-white/10 bg-white/5">
           <h4 className="text-xs font-black uppercase tracking-widest">Sector Deployment Log</h4>
         </div>
@@ -465,7 +492,7 @@ const LevelsPage = ({ setPage, stats, setStats }) => (
   <div className="p-8 md:p-12 max-w-6xl mx-auto min-h-screen">
     <button onClick={() => setPage('home')} className="mb-10 text-purple-500 font-black uppercase text-[10px] tracking-widest">← System Map</button>
     <h2 className="text-4xl font-black mb-8 italic uppercase tracking-tighter">Sector Navigation</h2>
-    <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-12 gap-3 h-[60vh] overflow-y-auto pr-4 custom-scrollbar">
+    <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-12 gap-3 h-[60vh] overflow-y-auto pr-4 custom-scrollbar shadow-inner">
       {[...Array(1000)].map((_, i) => (
         <button key={i} disabled={i + 1 > stats.maxUnlocked} onClick={() => { setStats({...stats, level: i + 1}); setPage('test'); }}
           className={`h-14 rounded-2xl font-black text-[10px] border transition-all duration-300 ${i + 1 <= stats.maxUnlocked ? 'border-purple-500 text-purple-400 hover:bg-purple-500 hover:text-black shadow-lg shadow-purple-500/10' : 'border-white/5 text-gray-800 cursor-not-allowed opacity-30'}`}>{i + 1}</button>
