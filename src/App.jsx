@@ -16,6 +16,36 @@ const generateTexts = (mode, level) => {
   return pool[level % pool.length];
 };
 
+// --- NEW COMPONENT: CUSTOM CURSOR ---
+const CustomCursor = () => {
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isHovering, setIsHovering] = useState(false);
+
+  useEffect(() => {
+    const moveCursor = (e) => setPosition({ x: e.clientX, y: e.clientY });
+    const handleMouseOver = (e) => { if (e.target.tagName === 'BUTTON' || e.target.tagName === 'A') setIsHovering(true); };
+    const handleMouseOut = () => setIsHovering(false);
+    
+    window.addEventListener('mousemove', moveCursor);
+    window.addEventListener('mouseover', handleMouseOver);
+    window.addEventListener('mouseout', handleMouseOut);
+    return () => {
+      window.removeEventListener('mousemove', moveCursor);
+      window.removeEventListener('mouseover', handleMouseOver);
+      window.removeEventListener('mouseout', handleMouseOut);
+    };
+  }, []);
+
+  return (
+    <div 
+      className={`fixed top-0 left-0 w-6 h-6 border-2 border-cyan-500 rounded-full pointer-events-none z-[9999] transition-transform duration-100 ease-out flex items-center justify-center`}
+      style={{ transform: `translate(${position.x - 12}px, ${position.y - 12}px) scale(${isHovering ? 2.5 : 1})`, mixBlendMode: 'difference' }}
+    >
+      <div className="w-1 h-1 bg-cyan-400 rounded-full shadow-[0_0_10px_#22d3ee]"></div>
+    </div>
+  );
+};
+
 const App = () => {
   const [currentPage, setCurrentPage] = useState('auth'); 
   const [user, setUser] = useState(null); 
@@ -24,7 +54,7 @@ const App = () => {
     level: 1, 
     maxUnlocked: 1, 
     totalPlayTime: 0, 
-    history: [] // Stores: {level, timeTaken, mode, date}
+    history: [] 
   });
 
   useEffect(() => {
@@ -57,12 +87,14 @@ const App = () => {
       case 'reviews': return <GenuineReviewPage user={user} setPage={setCurrentPage} />;
       case 'certificate': return <CertificatePage setPage={setCurrentPage} stats={stats} user={user} />;
       case 'analytics': return <AnalyticsPage setPage={setCurrentPage} stats={stats} />;
+      case 'leaderboard': return <LeaderboardPage setPage={setCurrentPage} />;
       default: return <AuthPage setUser={setUser} setPage={setCurrentPage} />;
     }
   };
 
   return (
-    <div className={`min-h-screen flex flex-col transition-all duration-500 ${settings.theme === 'dark' ? 'bg-[#050505] text-white' : 'bg-[#f0f2f5] text-gray-900'} font-sans`}>
+    <div className={`min-h-screen flex flex-col transition-all duration-500 ${settings.theme === 'dark' ? 'bg-[#050505] text-white' : 'bg-[#f0f2f5] text-gray-900'} font-sans cursor-none`}>
+      <CustomCursor />
       <div className="flex-grow">{renderPage()}</div>
       <footer className="w-full py-6 flex flex-col items-center opacity-40">
         <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/5 rounded-full backdrop-blur-md">
@@ -153,9 +185,10 @@ const HomePage = ({ user, setUser, setPage, settings, setSettings, stats }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-5xl">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 w-full max-w-6xl px-4">
         <MenuCard label="Engage" icon="⚡" onClick={() => setPage('test')} color="from-cyan-500 to-blue-600" />
         <MenuCard label="Levels" icon="🗺️" onClick={() => setPage('levels')} color="from-purple-500 to-indigo-600" />
+        <MenuCard label="Rankings" icon="📊" onClick={() => setPage('leaderboard')} color="from-green-500 to-teal-600" />
         <MenuCard label="Reviews" icon="⭐" onClick={() => setPage('reviews')} color="from-pink-500 to-rose-600" />
         <MenuCard label="Awards" icon="📜" onClick={() => setPage('certificate')} color="from-amber-500 to-orange-600" />
       </div>
@@ -176,6 +209,43 @@ const HomePage = ({ user, setUser, setPage, settings, setSettings, stats }) => {
       </div>
     </div>
   );
+};
+
+// --- NEW PAGE: LEADERBOARD ---
+const LeaderboardPage = ({ setPage }) => {
+    const [players, setPlayers] = useState([]);
+
+    useEffect(() => {
+      const allProgress = JSON.parse(localStorage.getItem('kf_user_progress') || "{}");
+      const list = Object.keys(allProgress).map(name => ({
+        name,
+        level: allProgress[name].maxUnlocked,
+        time: allProgress[name].totalPlayTime
+      })).sort((a, b) => b.level - a.level || a.time - b.time);
+      setPlayers(list);
+    }, []);
+
+    return (
+      <div className="p-8 md:p-20 max-w-4xl mx-auto min-h-screen">
+        <button onClick={() => setPage('home')} className="mb-10 text-green-500 font-black text-xs uppercase tracking-widest">← Return to Base</button>
+        <h2 className="text-5xl font-black mb-10 italic uppercase tracking-tighter">Global Rankings</h2>
+        <div className="space-y-4">
+          {players.map((p, i) => (
+            <div key={i} className={`flex justify-between items-center p-6 rounded-2xl border ${i === 0 ? 'bg-cyan-500/10 border-cyan-500' : 'bg-white/5 border-white/10'}`}>
+              <div className="flex items-center gap-6">
+                <span className={`text-2xl font-black ${i === 0 ? 'text-cyan-400' : 'text-gray-600'}`}>#0{i + 1}</span>
+                <span className="font-black uppercase tracking-widest">{p.name}</span>
+              </div>
+              <div className="text-right">
+                <div className="text-cyan-400 font-black">SECTOR {p.level}</div>
+                <div className="text-[10px] text-gray-500 uppercase font-bold">{Math.floor(p.time/60)}m Uptime</div>
+              </div>
+            </div>
+          ))}
+          {players.length === 0 && <p className="text-center text-gray-500 uppercase font-black italic">No data synced in local network.</p>}
+        </div>
+      </div>
+    );
 };
 
 // --- ANALYTICS PAGE ---
@@ -348,7 +418,7 @@ const TestPage = ({ setPage, settings, stats, setStats }) => {
         history: [...stats.history, newEntry]
       });
       setInput(""); 
-      setPage('home'); // Returning to home to show updated progress
+      setPage('home'); 
       alert(`Sector ${stats.level} Secured in ${timeTaken}s!`);
     }
   };
@@ -430,7 +500,7 @@ const LevelsPage = ({ setPage, stats, setStats }) => (
 
 // --- MENU CARD ---
 const MenuCard = ({ label, icon, onClick, color }) => (
-  <button onClick={onClick} className={`bg-gradient-to-br ${color} p-8 md:p-12 rounded-[3rem] flex flex-col items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-2xl group`}>
+  <button onClick={onClick} className={`bg-gradient-to-br ${color} p-8 md:p-12 rounded-[3rem] flex flex-col items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-2xl group`}>
     <span className="text-5xl mb-4 group-hover:animate-bounce transition-all">{icon}</span>
     <span className="font-black text-[10px] tracking-[0.2em] uppercase text-white">{label}</span>
   </button>
